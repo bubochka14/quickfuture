@@ -23,8 +23,9 @@ static int typeId(const QVariant& v) {
     return v.userType();
 }
 
-Future::Future(QObject *parent) : QObject(parent)
+Future::Future(QQmlEngine* qmlEngine, QObject* parent) : QObject(parent), m_engine(qmlEngine)
 {
+
 }
 
 void Future::registerType(int typeId, VariantWrapperBase* wrapper)
@@ -228,8 +229,7 @@ void Future::sync(const QVariant &future, const QString &propertyInFuture, QObje
 static QObject *provider(QQmlEngine *engine, QJSEngine *scriptEngine) {
     Q_UNUSED(scriptEngine);
 
-    Future* object = new Future();
-    object->setEngine(engine);
+    Future* object = new Future(engine);
 
     return object;
 }

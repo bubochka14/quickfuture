@@ -6,14 +6,20 @@
 #include <QQmlEngine>
 #include <QVariantMap>
 #include "qfvariantwrapper.h"
-
+#include <qqmlengine.h>
 namespace QuickFuture {
 
 class Future : public QObject
 {
-    Q_OBJECT
+    Q_OBJECT;
+    QML_SINGLETON;
+    QML_ELEMENT;
 public:
-    explicit Future(QObject *parent = 0);
+    explicit Future(QQmlEngine* qmlEngine, QObject *parent = 0);
+    static Future* create(QQmlEngine* qmlEngine, QJSEngine*)
+    {
+        return new Future(qmlEngine);
+    }
 
     template <typename T>
     static void registerType() {
