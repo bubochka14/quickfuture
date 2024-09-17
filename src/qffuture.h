@@ -7,9 +7,11 @@
 #include <QVariantMap>
 #include "qfvariantwrapper.h"
 #include <qqmlengine.h>
+#include "quickfuture_include.h"
+
 namespace QuickFuture {
 
-class Future : public QObject
+class QUICK_FUTURE_EXPORT Future : public QObject
 {
     Q_OBJECT;
     QML_SINGLETON;

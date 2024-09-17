@@ -4,7 +4,7 @@
 #include <QtQml/QQmlExtensionPlugin>
 #include <functional>
 #include "qffuture.h"
-
+#include "quickfuture_include.h"
 namespace QuickFuture {
 
     template <typename T>
@@ -20,7 +20,7 @@ namespace QuickFuture {
 }
 
 #ifdef QUICK_FUTURE_BUILD_PLUGIN
-class QuickFutureQmlPlugin : public QQmlExtensionPlugin
+class QUICK_FUTURE_EXPORT QuickFutureQmlPlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)

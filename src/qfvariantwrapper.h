@@ -10,13 +10,12 @@
 #include <QCoreApplication>
 #include <QQmlEngine>
 #include <functional>
-
 namespace QuickFuture {
 
     typedef std::function<QVariant(void*)> Converter;
 
     template <typename T>
-    inline QJSValueList valueList(const QPointer<QQmlEngine>& engine, const QFuture<T>& future) {
+    inline QJSValueList valueList(QQmlEngine* engine, const QFuture<T>& future) {
         QJSValue value;
         if (future.resultCount() > 0)
             value = engine->toScriptValue<T>(future.result());
@@ -24,7 +23,7 @@ namespace QuickFuture {
     }
 
     template <>
-    inline QJSValueList valueList<void>(const QPointer<QQmlEngine>& engine, const QFuture<void>& future) {
+    inline QJSValueList valueList<void>(QQmlEngine* engine, const QFuture<void>& future) {
         Q_UNUSED(engine);
         Q_UNUSED(future);
         return QJSValueList();
@@ -130,7 +129,7 @@ public:
 
     virtual QVariant results(const QVariant& v) = 0;
 
-    virtual void onFinished(QPointer<QQmlEngine> engine, const QVariant& v, const QJSValue& func, QObject* owner) = 0;
+    virtual void onFinished(QQmlEngine* engine, const QVariant& v, const QJSValue& func, QObject* owner) = 0;
 
     virtual void onCanceled(QPointer<QQmlEngine> engine, const QVariant& v, const QJSValue& func, QObject* owner) = 0;
 
@@ -221,8 +220,49 @@ public:
 
     QF_WRAPPER_DECL_READ(int, progressMaximum)
 
-    QF_WRAPPER_CONNECT(onFinished, isFinished, finished)
+    virtual void onFinished(QQmlEngine* engine, const QVariant& v,
+            const QJSValue& func, QObject* owner) override {
+        QPointer<QObject> context = owner;
+        if (!func.isCallable()) {
 
+            qWarning() << "Future.onFinished: Callback is not callable";
+            return;
+        }
+        QFuture<T> future = v.value<QFuture<T>>();
+        auto listener = [func,engine,future]() {
+
+            QJSValue callback = func;
+            if (!engine)
+                return;
+            QJSValue ret = callback.call(QuickFuture::valueList<T>(engine, future));
+            if (ret.isError()) {
+
+                //printException(ret);
+            }
+            
+        };
+        if (future.isFinished()) {
+
+            QuickFuture::nextTick([=]() {
+                if (owner && context.isNull()) {
+
+                    return;
+                }
+                if(this)
+                listener();
+            });
+        }
+        else {
+
+            QFutureWatcher<T>* watcher = new QFutureWatcher<T>();
+            QObject::connect(watcher, &QFutureWatcherBase::finished, [=]() {
+                listener();
+                delete watcher;
+                });
+            watcher->setParent(owner);
+            watcher->setFuture(future);
+        }
+    }
     QF_WRAPPER_CONNECT(onCanceled, isCanceled, canceled)
 
     QVariant result(const QVariant &future) {
