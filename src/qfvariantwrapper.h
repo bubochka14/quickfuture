@@ -10,7 +10,6 @@
 #include <QCoreApplication>
 #include <QQmlEngine>
 #include <functional>
-
 namespace QuickFuture {
 
     typedef std::function<QVariant(void*)> Converter;
